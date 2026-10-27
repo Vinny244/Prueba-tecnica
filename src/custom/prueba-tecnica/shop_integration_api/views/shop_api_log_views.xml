@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="shop_api_log_view_list" model="ir.ui.view">
+        <field name="name">shop.api.log.list</field>
+        <field name="model">shop.api.log</field>
+        <field name="arch" type="xml">
+            <list string="Registro de llamadas API" create="0" edit="0"
+                  decoration-danger="status_code &gt;= 400"
+                  decoration-success="status_code &lt; 300">
+                <field name="request_date"/>
+                <field name="http_method"/>
+                <field name="endpoint"/>
+                <field name="user_id"/>
+                <field name="status_code"/>
+                <field name="duration_ms"/>
+                <field name="error_code" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shop_api_log_view_form" model="ir.ui.view">
+        <field name="name">shop.api.log.form</field>
+        <field name="model">shop.api.log</field>
+        <field name="arch" type="xml">
+            <form string="Llamada API" create="0" edit="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="endpoint"/>
+                            <field name="http_method"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="request_date"/>
+                            <field name="status_code"/>
+                            <field name="duration_ms"/>
+                            <field name="error_code"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shop_api_log_view_search" model="ir.ui.view">
+        <field name="name">shop.api.log.search</field>
+        <field name="model">shop.api.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="endpoint"/>
+                <field name="user_id"/>
+                <field name="status_code"/>
+                <filter name="errors" string="Con error" domain="[('status_code', '&gt;=', 400)]"/>
+                <filter name="success" string="Exitosas" domain="[('status_code', '&lt;', 300)]"/>
+                <group>
+                    <filter name="group_endpoint" string="Endpoint" context="{'group_by': 'endpoint'}"/>
+                    <filter name="group_user" string="Usuario" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_status" string="Código HTTP" context="{'group_by': 'status_code'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="shop_api_log_action" model="ir.actions.act_window">
+        <field name="name">Registro de llamadas API</field>
+        <field name="res_model">shop.api.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="shop_webhook_event_view_list" model="ir.ui.view">
+        <field name="name">shop.webhook.event.list</field>
+        <field name="model">shop.webhook.event</field>
+        <field name="arch" type="xml">
+            <list string="Webhooks salientes" create="0"
+                  decoration-success="state == 'sent'"
+                  decoration-warning="state == 'pending'"
+                  decoration-danger="state == 'failed'">
+                <field name="create_date"/>
+                <field name="name"/>
+                <field name="order_id"/>
+                <field name="picking_id"/>
+                <field name="retry_count"/>
+                <field name="response_code"/>
+                <field name="next_retry_at"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shop_webhook_event_view_form" model="ir.ui.view">
+        <field name="name">shop.webhook.event.form</field>
+        <field name="model">shop.webhook.event</field>
+        <field name="arch" type="xml">
+            <form string="Webhook saliente" create="0">
+                <header>
+                    <button name="action_retry_now" string="Reintentar ahora" type="object"
+                            class="oe_highlight" invisible="state == 'sent'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,sent,failed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="order_id"/>
+                            <field name="picking_id"/>
+                            <field name="target_url"/>
+                        </group>
+                        <group>
+                            <field name="retry_count"/>
+                            <field name="max_retries"/>
+                            <field name="next_retry_at"/>
+                            <field name="response_code"/>
+                            <field name="sent_at"/>
+                        </group>
+                    </group>
+                    <group string="Payload y diagnóstico">
+                        <field name="payload"/>
+                        <field name="last_error" invisible="not last_error"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shop_webhook_event_action" model="ir.actions.act_window">
+        <field name="name">Webhooks salientes</field>
+        <field name="res_model">shop.webhook.event</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_shop_integration_root"
+              name="Integración Tienda"
+              parent="sale.menu_sale_config"
+              sequence="90"
+              groups="sales_team.group_sale_manager"/>
+
+    <menuitem id="menu_shop_api_log"
+              name="Registro de llamadas API"
+              parent="menu_shop_integration_root"
+              action="shop_api_log_action"
+              sequence="10"/>
+
+    <menuitem id="menu_shop_webhook_event"
+              name="Webhooks salientes"
+              parent="menu_shop_integration_root"
+              action="shop_webhook_event_action"
+              sequence="20"/>
+</odoo>

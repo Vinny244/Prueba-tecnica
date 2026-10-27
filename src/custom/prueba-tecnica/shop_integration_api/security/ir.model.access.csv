@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_shop_api_log_salesman,shop.api.log.salesman,model_shop_api_log,sales_team.group_sale_salesman,1,0,0,0
+access_shop_api_log_manager,shop.api.log.manager,model_shop_api_log,sales_team.group_sale_manager,1,1,1,1
+access_shop_api_idempotency_salesman,shop.api.idempotency.salesman,model_shop_api_idempotency,sales_team.group_sale_salesman,1,0,0,0
+access_shop_api_idempotency_manager,shop.api.idempotency.manager,model_shop_api_idempotency,sales_team.group_sale_manager,1,1,1,1
+access_shop_webhook_event_stock_user,shop.webhook.event.stock.user,model_shop_webhook_event,stock.group_stock_user,1,0,0,0
+access_shop_webhook_event_sale_manager,shop.webhook.event.sale.manager,model_shop_webhook_event,sales_team.group_sale_manager,1,1,1,1
