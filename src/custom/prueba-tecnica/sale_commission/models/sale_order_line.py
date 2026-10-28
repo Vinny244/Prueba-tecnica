@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Resolución Ejercicio 3
+
 from odoo import api, fields, models
 
 
@@ -31,4 +34,4 @@ class SaleOrderLine(models.Model):
         ])
         if rules:
             return rules.sorted(lambda r: len(r.categ_id.parent_path or ""), reverse=True)[0].percent
-        return self.env.user.commission_percent
+        return self.order_id.user_id.commission_percent
