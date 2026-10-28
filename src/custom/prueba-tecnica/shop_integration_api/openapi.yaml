@@ -1,0 +1,357 @@
+openapi: 3.1.0
+info:
+  title: API de Integración para Tienda en Línea (Odoo 18)
+  version: 1.0.0
+  description: |
+    API REST para consultar catálogo de productos con disponibilidad de inventario
+    y registrar pedidos de venta desde la tienda en línea hacia Odoo.
+servers:
+  - url: http://localhost:8069
+    description: Servidor local de desarrollo Odoo
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Clave API personal generada en Odoo (`res.users.apikeys`).
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: Sesión autenticada de usuario en Odoo (`auth='user'`).
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - field
+            - message
+          properties:
+            code:
+              type: string
+              example: PRODUCT_NOT_FOUND
+            field:
+              type: string
+              example: lines[1].default_code
+            message:
+              type: string
+              example: No existe un producto con el código ABC-123
+
+    ProductItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        code:
+          type: string
+          example: LAP-001
+        default_code:
+          type: string
+          example: LAP-001
+        name:
+          type: string
+          example: Laptop Pro 15
+        price:
+          type: number
+          format: float
+          example: 1200.0
+        list_price:
+          type: number
+          format: float
+          example: 1200.0
+        qty_available:
+          type: number
+          format: float
+          example: 15.0
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 45
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        next_page:
+          type: integer
+          nullable: true
+          example: 2
+
+    ProductListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductItem'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductItem'
+        total:
+          type: integer
+          example: 45
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        next_page:
+          type: integer
+          nullable: true
+          example: 2
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    OrderLineInput:
+      type: object
+      required:
+        - default_code
+        - quantity
+      properties:
+        default_code:
+          type: string
+          example: LAP-001
+        quantity:
+          type: number
+          format: float
+          minimum: 0.01
+          example: 2
+
+    OrderCreateRequest:
+      type: object
+      required:
+        - rif
+        - external_reference
+        - lines
+      properties:
+        rif:
+          type: string
+          description: RIF del cliente registrado en Odoo (`res.partner.vat`).
+          example: J-31234567-8
+        external_reference:
+          type: string
+          description: Referencia del pedido en la tienda en línea.
+          example: WEB-2026-00091
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderLineInput'
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 15
+        name:
+          type: string
+          example: S00015
+        state:
+          type: string
+          example: sale
+        external_reference:
+          type: string
+          example: WEB-2026-00091
+        partner_rif:
+          type: string
+          example: J-31234567-8
+        amount_untaxed:
+          type: number
+          example: 2400.0
+        amount_total:
+          type: number
+          example: 2400.0
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              default_code:
+                type: string
+              quantity:
+                type: number
+              price_unit:
+                type: number
+              price_subtotal:
+                type: number
+
+paths:
+  /api/v1/products:
+    get:
+      summary: Consultar productos activos para la venta con su stock disponible
+      security:
+        - BearerAuth: []
+        - SessionCookie: []
+      parameters:
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID de la categoría de producto (`product.category`, incluye subcategorías).
+        - name: in_stock
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Si es `true` o `1`, devuelve únicamente productos con stock disponible mayor que cero.
+        - name: modified_since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Fecha o fecha-hora ISO 8601 (`YYYY-MM-DD` o `YYYY-MM-DDTHH:MM:SS`) desde la última modificación.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Lista paginada de productos con stock disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '400':
+          description: Parámetro de filtro o fecha con formato inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autenticado o clave API inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/orders:
+    post:
+      summary: Crear y confirmar un pedido de venta desde la tienda en línea
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Clave única de idempotencia para evitar duplicar pedidos en reintentos de red.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '201':
+          description: Pedido creado (o recuperado por idempotencia) exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Cuerpo JSON mal formado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Cabecera Authorization ausente o clave API inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: La misma `Idempotency-Key` fue reutilizada con un contenido de pedido distinto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Error de validación de negocio (RIF inexistente, producto inexistente o cantidad <= 0).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+webhooks:
+  orderDelivered:
+    post:
+      summary: Aviso saliente cuando se valida la entrega del pedido en almacén
+      description: |
+        Odoo envía una petición HTTP POST a la URL configurada en el parámetro del sistema
+        `shop_integration_api.webhook_url` cuando se valida (`button_validate`) el albarán de salida (`stock.picking`).
+        Si la tienda no responde o devuelve error, la entrega en Odoo no se bloquea y una tarea planificada
+        (`ir.cron`) reintenta el envío con backoff exponencial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  example: order.delivered
+                order_id:
+                  type: integer
+                  example: 15
+                order_name:
+                  type: string
+                  example: S00015
+                external_reference:
+                  type: string
+                  example: WEB-2026-00091
+                picking_id:
+                  type: integer
+                  example: 8
+                picking_name:
+                  type: string
+                  example: WH/OUT/00008
+                delivered_at:
+                  type: string
+                  format: date-time
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      default_code:
+                        type: string
+                      product_id:
+                        type: integer
+                      quantity_delivered:
+                        type: number
+      responses:
+        '200':
+          description: Confirmación de recepción por parte de la tienda.
