@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_payment_request" model="ir.actions.report">
+        <field name="name">Solicitud de Pago</field>
+        <field name="model">payment.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">payment_request.report_payment_request</field>
+        <field name="report_file">payment_request.report_payment_request</field>
+        <field name="print_report_name">'Solicitud de Pago - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_payment_request"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_payment_request">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Solicitud de Pago <span t-out="o.name"/></h2>
+                        <div class="row mt-3 mb-3">
+                            <div class="col-6">
+                                <strong>Proveedor:</strong> <span t-out="o.partner_id.display_name"/><br/>
+                                <strong>Solicitante:</strong> <span t-out="o.requester_id.name"/><br/>
+                                <strong>Fecha de solicitud:</strong> <span t-field="o.date"/><br/>
+                                <strong>Compañía:</strong> <span t-out="o.company_id.name"/>
+                            </div>
+                            <div class="col-6">
+                                <strong>Estado:</strong> <span t-field="o.state"/><br/>
+                                <strong>Monto solicitado:</strong>
+                                <span t-field="o.amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/><br/>
+                                <t t-if="o.approved_by_id">
+                                    <strong>Aprobado por:</strong> <span t-out="o.approved_by_id.name"/><br/>
+                                    <strong>Fecha de aprobación:</strong> <span t-field="o.approved_date"/><br/>
+                                </t>
+                                <t t-if="o.payment_id">
+                                    <strong>Comprobante de pago:</strong> <span t-out="o.payment_id.name"/><br/>
+                                    <strong>Monto pagado:</strong>
+                                    <span t-field="o.payment_amount" t-options='{"widget": "monetary", "display_currency": o.payment_currency_id}'/>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <strong>Concepto:</strong>
+                            <p t-out="o.concept"/>
+                        </div>
+                        <div class="mt-3" t-if="o.rejection_reason">
+                            <strong>Motivo de rechazo:</strong>
+                            <p t-out="o.rejection_reason"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

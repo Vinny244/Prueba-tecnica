@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_request_reject_wizard_view_form" model="ir.ui.view">
+        <field name="name">payment.request.reject.wizard.form</field>
+        <field name="model">payment.request.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Rechazar solicitud de pago">
+                <group>
+                    <field name="request_id" invisible="True"/>
+                    <field name="reason" placeholder="Indique el motivo por el cual se rechaza la solicitud..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm_reject" string="Confirmar rechazo" type="object" class="btn-danger"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="payment_request_pay_wizard_view_form" model="ir.ui.view">
+        <field name="name">payment.request.pay.wizard.form</field>
+        <field name="model">payment.request.pay.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Registrar pago de proveedor">
+                <group>
+                    <field name="request_id" invisible="True"/>
+                    <field name="company_id" invisible="True"/>
+                    <field name="journal_id"/>
+                    <field name="payment_date"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_pay" string="Registrar pago" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
