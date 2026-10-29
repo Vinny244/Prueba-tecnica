@@ -1,0 +1,21 @@
+{
+    "name": "Solicitudes de pago con aprobación",
+    "summary": "Flujo de solicitudes de pago a proveedores con niveles de aprobación y tesorería",
+    "version": "18.0.1.0.0",
+    "category": "Accounting/Accounting",
+    "author": "Binaural",
+    "license": "LGPL-3",
+    "depends": ["account", "mail"],
+    "data": [
+        "security/payment_request_security.xml",
+        "security/ir.model.access.csv",
+        "data/ir_sequence_data.xml",
+        "wizards/payment_request_wizard_views.xml",
+        "views/payment_approval_level_views.xml",
+        "views/payment_request_views.xml",
+        "views/payment_request_menus.xml",
+        "report/payment_request_report.xml",
+    ],
+    "installable": True,
+    "application": True,
+}
