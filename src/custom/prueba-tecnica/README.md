@@ -1,23 +1,24 @@
-# Prueba técnica — Desarrollador Odoo
+# Prueba técnica — Desarrollador Odoo (Odoo 18.0)
 
-Esta carpeta es el directorio de addons de la prueba. Aquí van **todos los módulos que entregues**
-(`shop_integration_api`, `fleet_inspection` ya migrado, `sale_commission` corregido y `payment_request`).
+- **Versión de Odoo declarada:** `18.0` (`ODOO_VERSION=18.0` en `.env`)
+- **Módulos entregados en esta carpeta (`src/custom/prueba-tecnica/`):**
 
-| Carpeta | Qué contiene |
-|---|---|
-| `src/custom/prueba-tecnica/sale_commission` | Módulo en producción del **Ejercicio 3** (ticket urgente). Revisa su historial con `git log -- src/custom/prueba-tecnica/sale_commission`. |
-| `src/custom/prueba-tecnica-odoo16/fleet_inspection` | Módulo del **Ejercicio 2**, escrito para **Odoo 16**. Está fuera del directorio de addons a propósito: con su versión `16.0.x` impediría arrancar Odoo 17 o superior. El primer paso de la migración es moverlo a `src/custom/prueba-tecnica/`. |
+| Ejercicio | Módulo | Tramos completados | Documentación incluida |
+| :--- | :--- | :--- | :--- |
+| **1. Integración con API para tienda en línea** | [`shop_integration_api`](shop_integration_api/) | **A, B y C** | [`README.md`](shop_integration_api/README.md), [`openapi.yaml`](shop_integration_api/openapi.yaml), [`AI_LOG.md`](shop_integration_api/AI_LOG.md) |
+| **2. Migración del módulo de inspecciones** | [`fleet_inspection`](fleet_inspection/) | **A, B y C** | [`README.md`](fleet_inspection/README.md), [`MIGRATION_PLAN.md`](fleet_inspection/MIGRATION_PLAN.md), [`AI_LOG.md`](fleet_inspection/AI_LOG.md) |
+| **3. Ticket urgente de última hora (T-200)** | [`sale_commission`](sale_commission/) | **A, B y C** *(rama `hotfix/T-200`)* | [`README.md`](sale_commission/README.md), [`INCIDENT.md`](sale_commission/INCIDENT.md), [`AI_LOG.md`](sale_commission/AI_LOG.md), [`scripts/audit_t200_affected_orders.py`](sale_commission/scripts/audit_t200_affected_orders.py) |
+| **4. Solicitudes de pago con aprobación** | [`payment_request`](payment_request/) | **A, B y C** | [`README.md`](payment_request/README.md), [`ARCHITECTURE.md`](payment_request/ARCHITECTURE.md), [`AI_LOG.md`](payment_request/AI_LOG.md) |
 
-## Levantar el entorno
+## Levantar el entorno y ejecutar las pruebas
 
-1. Copia `instances.example.jsonc` a `instances.json` y agrega una instancia que use esta carpeta como addons
-   (cambia la versión por la que elijas: 17.0, 18.0 o 19.0):
+1. Configurar `instances.json` apuntando a **Odoo 18.0** y a `src/custom/prueba-tecnica`:
 
-   ```jsonc
+   ```json
    "prueba-tecnica": {
      "odoo_version": "18.0",
      "external_port": 8069,
-     "database": "pg16",
+     "database": "v18",
      "odoo_config": "18.0_default",
      "overwrite_odoo_config": {
        "addons": ["src/custom/prueba-tecnica"],
@@ -26,10 +27,10 @@ Esta carpeta es el directorio de addons de la prueba. Aquí van **todos los mód
    }
    ```
 
-   La instancia necesita una entrada en `odoo_configs` para su versión y una en `databases`
-   (puedes partir de las del ejemplo). No necesitas Odoo Enterprise.
+2. Construir y levantar: `./odoo build` y `./odoo start`.
+3. Ejecutar toda la suite de pruebas sobre una base de datos limpia:
 
-2. Construye y levanta: `./odoo build` y `./odoo start`.
-3. Corre las pruebas: `./odoo test prueba-tecnica sale_commission` (varios módulos separados por coma).
-
-Más detalles del CLI en el `readme.md` de la raíz del repositorio.
+   ```bash
+   ./odoo test -d prueba_limpia \
+     -m shop_integration_api,fleet_inspection,sale_commission,payment_request
+   ```
