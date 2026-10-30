@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_equipment_loan_list" model="ir.ui.view">
+        <field name="name">equipment.loan.list</field>
+        <field name="model">equipment.loan</field>
+        <field name="arch" type="xml">
+            <list string="Préstamos de Equipos" decoration-danger="is_overdue">
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <field name="user_id"/>
+                <field name="date_start"/>
+                <field name="date_due"/>
+                <field name="date_return"/>
+                <field name="is_overdue" widget="boolean_toggle" readonly="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'loaned'"
+                       decoration-success="state == 'returned'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_equipment_loan_form" model="ir.ui.view">
+        <field name="name">equipment.loan.form</field>
+        <field name="model">equipment.loan</field>
+        <field name="arch" type="xml">
+            <form string="Préstamo de Equipo">
+                <header>
+                    <button name="action_loan"
+                            string="Entregar"
+                            type="object"
+                            class="btn-primary"
+                            groups="equipment_loan.group_equipment_loan_manager"
+                            invisible="state != 'draft'"/>
+                    <button name="action_return"
+                            string="Devolver"
+                            type="object"
+                            class="btn-primary"
+                            groups="equipment_loan.group_equipment_loan_manager"
+                            invisible="state != 'loaned'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,loaned,returned"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="equipment_id" readonly="state != 'draft'"/>
+                            <field name="user_id" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="date_due" readonly="state != 'draft'"/>
+                            <field name="date_return" invisible="state != 'returned' and not date_return"/>
+                            <field name="is_overdue" invisible="state != 'loaned' or not is_overdue" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_equipment_loan_search" model="ir.ui.view">
+        <field name="name">equipment.loan.search</field>
+        <field name="model">equipment.loan</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Préstamos">
+                <field name="name"/>
+                <field name="equipment_id"/>
+                <field name="user_id"/>
+                <separator/>
+                <filter name="filter_draft" string="Borrador" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_loaned" string="Prestados" domain="[('state', '=', 'loaned')]"/>
+                <filter name="filter_returned" string="Devueltos" domain="[('state', '=', 'returned')]"/>
+                <separator/>
+                <filter name="filter_overdue" string="Vencidos" domain="[('is_overdue', '=', True)]"/>
+                <group expand="0" string="Agrupar por">
+                    <filter name="group_by_equipment" string="Equipo" context="{'group_by': 'equipment_id'}"/>
+                    <filter name="group_by_user" string="Persona que lo recibe" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_by_state" string="Estado" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Maintenance Equipment Inherited Form View (Smart Button) -->
+    <record id="hr_equipment_view_form_inherit_loan" model="ir.ui.view">
+        <field name="name">maintenance.equipment.form.inherit.loan</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_loans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-exchange">
+                    <field name="loan_count" widget="statinfo" string="Préstamos"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_equipment_loan" model="ir.actions.act_window">
+        <field name="name">Préstamos de Equipos</field>
+        <field name="res_model">equipment.loan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_equipment_loan_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Registra un nuevo préstamo de equipo
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu within Maintenance -->
+    <menuitem id="menu_equipment_loan"
+              name="Préstamos"
+              parent="maintenance.menu_maintenance_title"
+              action="action_equipment_loan"
+              sequence="25"/>
+
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_equipment_loan_user,equipment.loan.user,model_equipment_loan,base.group_user,1,1,1,0
+access_equipment_loan_manager,equipment.loan.manager,model_equipment_loan,equipment_loan.group_equipment_loan_manager,1,1,1,1
